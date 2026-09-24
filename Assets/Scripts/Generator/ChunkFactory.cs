@@ -13,7 +13,7 @@ public class ChunkFactory
     {
         GameObject instance = Object.Instantiate(
             prefabs[Random.Range(0, prefabs.Length)],
-            port.transform.position,
+            port.transform.position + port.transform.right,
             port.transform.rotation *
             Quaternion.Euler(
                 0f,
