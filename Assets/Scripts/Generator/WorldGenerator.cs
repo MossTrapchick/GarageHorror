@@ -7,14 +7,18 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] private GameObject[] chunkPrefabs;
     [SerializeField] private Transform player;
     [SerializeField] private int rayCount = 360;
-    [SerializeField] private float loadDistance = 20f, updateRate = 1f;
+    [SerializeField] private float loadDistance = 20f;
+    [SerializeField] private float updateRate = 1f;
 
     private LayerMask wallMask;
+    private ChunkFactory chunkFactory;
     private HashSet<Chunk> activeChunks = new();
 
     private void Start()
     {
         wallMask = LayerMask.GetMask("Wall");
+        chunkFactory = new ChunkFactory(chunkPrefabs);
+
         StartCoroutine(UpdateWorld());
     }
 
@@ -30,11 +34,12 @@ public class WorldGenerator : MonoBehaviour
     private void UpdateVisibility()
     {
         HashSet<Port> ports = new();
+        float angleStep = 360f / rayCount;
 
         for (int i = 0; i < rayCount; i++)
         {
             Vector3 direction =
-                Quaternion.Euler(0f, 360f / rayCount * i, 0f) * Vector3.forward;
+                Quaternion.Euler(0f, angleStep * i, 0f) * Vector3.forward;
 
             TraceRay(ports, player.position, direction, loadDistance);
         }
@@ -65,25 +70,19 @@ public class WorldGenerator : MonoBehaviour
         if (!Physics.Raycast(origin, direction, out RaycastHit hit, distance, wallMask))
             return;
 
-        Debug.DrawRay(origin, direction * hit.distance, Color.red, updateRate/2f);
+        Debug.DrawRay(
+            origin,
+            direction * hit.distance,
+            Color.red,
+            updateRate / 2f);
 
         if (!hit.collider.CompareTag("Port"))
             return;
 
         Port port = hit.collider.GetComponent<Port>();
 
-        if (ports.Add(port))
-        {
-            if (port.NextChunk == null)
-            {
-                GameObject chunk = Instantiate(
-                    chunkPrefabs[Random.Range(0, chunkPrefabs.Length)],
-                    port.transform.position,
-                    port.transform.rotation * Quaternion.Euler(0, Random.Range(-port.RotationRange, port.RotationRange), 0));
-
-                port.Connect(chunk.GetComponent<Chunk>());
-            }
-        }
+        if (ports.Add(port) && port.NextChunk == null)
+            chunkFactory.Create(port);
 
         TraceRay(
             ports,

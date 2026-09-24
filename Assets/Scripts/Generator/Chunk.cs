@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class Chunk : MonoBehaviour
 {
-    [SerializeField] Port enter;
+    [SerializeField] private Port enter;
+
     public Port Enter => enter;
 }
