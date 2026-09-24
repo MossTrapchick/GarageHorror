@@ -1,14 +1,16 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Port : MonoBehaviour
 {
     [SerializeField] private Transform placePoint;
-    public GameObject[] connectedChunks;
     public Transform PlacePoint => placePoint;
-    public void OnGenerate(GameObject chunk)
+    [SerializeField] private GameObject currentChunk;
+    public GameObject CurrentChunk { get => currentChunk; private set { currentChunk = value; } }
+    public GameObject NextChunk {  get; private set; }
+    public void OnGenerate(GameObject currentChunk, GameObject nextChunk)
     {
-        //connectedChunks[0] присвоен текущему из инспектора
-        connectedChunks[1] = chunk;
+        NextChunk = nextChunk;
+        nextChunk.GetComponent<Chunk>().Enter.NextChunk = currentChunk;
     }
+    
 }

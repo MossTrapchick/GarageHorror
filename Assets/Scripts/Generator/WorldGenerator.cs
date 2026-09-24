@@ -10,7 +10,6 @@ public class WorldGenerator : MonoBehaviour
     [SerializeField] private Transform player;
     [SerializeField] private int rayCount = 360, loadDistance = 20;
     LayerMask mask;
-    List<Port> ports = new();
     List<GameObject> chunks = new();
     private void Start()
     {
@@ -38,14 +37,13 @@ public class WorldGenerator : MonoBehaviour
 
 
         List<GameObject> visibleChunks = new();
-        foreach (var port in visiblePorts)
-            visibleChunks.AddRange(port.GetComponent<Port>().connectedChunks);
+        foreach (var port in visiblePorts.Select(p => p.GetComponent<Port>()))
+            visibleChunks.AddRange(new GameObject[]{port.CurrentChunk, port.NextChunk});
 
         var toDelete = chunks.Except(visibleChunks).ToList();
         foreach(var chunk in toDelete) 
             Destroy(chunk);
 
-        ports = visiblePorts.Select(g => g.GetComponent<Port>()).ToList();
         chunks = visibleChunks;
     }
 
@@ -53,7 +51,7 @@ public class WorldGenerator : MonoBehaviour
     {
         if (Physics.Raycast(origin, direction, out var hit, distance, mask))
         {
-            Debug.DrawRay(origin, direction * hit.distance, Color.red, 1f);
+            Debug.DrawRay(origin, direction * hit.distance, Color.red, 0.5f);
             if (!hit.collider.gameObject.CompareTag("Way")) return visiblePorts;
             
             if (!visiblePorts.Contains(hit.collider.gameObject))
@@ -61,14 +59,12 @@ public class WorldGenerator : MonoBehaviour
                 visiblePorts.Add(hit.collider.gameObject);
                 var port = hit.collider.gameObject.GetComponent<Port>();
                 //generate
-                if (!ports.Contains(port))
-                {
-                    port.OnGenerate(Instantiate(
+                if (port.NextChunk == null)
+                    port.OnGenerate(port.CurrentChunk,Instantiate(
                         chunkPrefabs[UnityEngine.Random.Range(0, chunkPrefabs.Length)],
                         port.PlacePoint.position, port.PlacePoint.rotation));
-                }
             }
-            visiblePorts = ray(visiblePorts, hit.point + direction * 0.1f, direction, Math.Clamp(distance - hit.distance, 0, loadDistance));
+            visiblePorts = ray(visiblePorts, hit.point + direction * 0.05f, direction, Math.Clamp(distance - hit.distance, 0, loadDistance));
             
         }
         return visiblePorts;
