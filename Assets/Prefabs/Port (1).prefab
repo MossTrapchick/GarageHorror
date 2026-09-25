@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Port
   rotationRange: 20
-  connectorMat: {fileID: 2100000, guid: faafe0f4426e95f43a3e1ff172abac74, type: 2}
+  connectorMat: {fileID: 2100000, guid: 5526faed66895a14fb17c5e6357a37ef, type: 2}
   currentChunk: {fileID: 0}
 --- !u!65 &2898952451969744540
 BoxCollider:

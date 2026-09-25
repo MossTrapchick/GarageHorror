@@ -1,4 +1,3 @@
-using UnityEditor.UIElements;
 using UnityEngine;
 
 public static class Connector
@@ -39,7 +38,6 @@ public static class Connector
         GameObject obj = new GameObject("Connection");
         obj.transform.SetParent(parent);
         obj.layer = 6;
-        obj.AddComponent<BoxCollider>();
 
         MeshFilter meshFilter = obj.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = obj.AddComponent<MeshRenderer>();

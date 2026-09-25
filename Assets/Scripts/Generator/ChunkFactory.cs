@@ -23,7 +23,6 @@ public class ChunkFactory
         Chunk chunk = instance.GetComponent<Chunk>();
 
         port.Connect(chunk);
-
         return chunk;
     }
 }
