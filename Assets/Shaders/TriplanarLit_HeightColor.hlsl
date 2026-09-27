@@ -9,12 +9,6 @@
 // ============================================================
 // Custom textures
 // ============================================================
-//
-// BaseMap, BumpMap, MetallicGlossMap and OcclusionMap
-// are already declared by URP LitInput.hlsl.
-//
-// Only custom HeightMap is declared here.
-//
 
 TEXTURE2D(_HeightMap);
 SAMPLER(sampler_HeightMap);
@@ -27,10 +21,30 @@ SAMPLER(sampler_HeightMap);
 float _HeightStrength;
 float _HeightSteps;
 
+
+// ------------------------------------------------------------
+// Height color - raised areas
+// ------------------------------------------------------------
+
 float4 _HeightColor;
 float _HeightColorStrength;
 float _HeightColorThreshold;
 float _HeightColorSmoothness;
+
+
+// ------------------------------------------------------------
+// Height color - recessed areas
+// ------------------------------------------------------------
+
+float4 _HeightColorInverse;
+float _HeightColorInverseStrength;
+float _HeightColorInverseThreshold;
+float _HeightColorInverseSmoothness;
+
+
+// ------------------------------------------------------------
+// Triplanar
+// ------------------------------------------------------------
 
 float4 _TriplanarTiling;
 float4 _TriplanarOffset;
@@ -149,30 +163,101 @@ float SampleHeight(float2 uv)
 
 
 // ============================================================
-// Height color mask
+// Raised Height Color
 // ============================================================
+//
+// High values of HeightMap produce this mask.
+//
+// Height = 1.0 -> fully raised
+// Height = 0.0 -> no raised mask
+//
 
 float GetHeightColorMask(float2 uv)
 {
     if (_HeightColorStrength <= 0.00001)
         return 0.0;
 
-    float height = SampleHeight(uv);
+    float height =
+        SampleHeight(uv);
 
     float halfWidth =
-        max(_HeightColorSmoothness, 0.001);
+        max(
+            _HeightColorSmoothness,
+            0.001
+        );
 
-    float mask = smoothstep(
-        _HeightColorThreshold - halfWidth,
-        _HeightColorThreshold + halfWidth,
-        height
-    );
+    float mask =
+        smoothstep(
+            _HeightColorThreshold - halfWidth,
+            _HeightColorThreshold + halfWidth,
+            height
+        );
 
     return saturate(
         mask * _HeightColorStrength
     );
 }
 
+
+// ============================================================
+// Recessed / Inverse Height Color
+// ============================================================
+//
+// This is the opposite of the raised mask.
+//
+// HeightMap is conceptually inverted:
+//
+// original height:
+//     1.0 = raised
+//     0.0 = recessed
+//
+// inverted height:
+//     1.0 = recessed
+//     0.0 = raised
+//
+// IMPORTANT:
+// This inversion is used ONLY for the color mask.
+// POM itself is NOT inverted.
+//
+
+float GetInverseHeightColorMask(float2 uv)
+{
+    if (_HeightColorInverseStrength <= 0.00001)
+        return 0.0;
+
+    float height =
+        SampleHeight(uv);
+
+
+    // Invert height only for the color mask.
+    float inverseHeight =
+        1.0 - height;
+
+
+    float halfWidth =
+        max(
+            _HeightColorInverseSmoothness,
+            0.001
+        );
+
+
+    float mask =
+        smoothstep(
+            _HeightColorInverseThreshold - halfWidth,
+            _HeightColorInverseThreshold + halfWidth,
+            inverseHeight
+        );
+
+
+    return saturate(
+        mask * _HeightColorInverseStrength
+    );
+}
+
+
+// ============================================================
+// Triplanar raised color mask
+// ============================================================
 
 float GetTriplanarHeightColorMask(
     float2 uvX,
@@ -189,6 +274,35 @@ float GetTriplanarHeightColorMask(
     float maskZ =
         GetHeightColorMask(uvZ);
 
+
+    return saturate(
+        maskX * weights.x +
+        maskY * weights.y +
+        maskZ * weights.z
+    );
+}
+
+
+// ============================================================
+// Triplanar recessed color mask
+// ============================================================
+
+float GetTriplanarInverseHeightColorMask(
+    float2 uvX,
+    float2 uvY,
+    float2 uvZ,
+    float3 weights)
+{
+    float maskX =
+        GetInverseHeightColorMask(uvX);
+
+    float maskY =
+        GetInverseHeightColorMask(uvY);
+
+    float maskZ =
+        GetInverseHeightColorMask(uvZ);
+
+
     return saturate(
         maskX * weights.x +
         maskY * weights.y +
@@ -200,14 +314,6 @@ float GetTriplanarHeightColorMask(
 // ============================================================
 // Parallax Occlusion Mapping
 // ============================================================
-//
-// IMPORTANT:
-// The tangent / bitangent basis here is intentionally identical
-// to the basis used by the triplanar normal reconstruction.
-//
-// This keeps POM and normal mapping in exactly the same
-// projection coordinate system.
-//
 
 float2 ParallaxOcclusionMapping(
     float2 uv,
@@ -218,21 +324,20 @@ float2 ParallaxOcclusionMapping(
         return uv;
 
 
-    // If the surface is viewed from behind this projection,
-    // don't perform POM in this projection.
-    //
-    // Using abs(viewNormal) here causes the parallax direction
-    // to flip when the object/view relationship changes.
     if (viewNormal <= 0.001)
         return uv;
 
 
     float safeViewNormal =
-        max(viewNormal, 0.08);
+        max(
+            viewNormal,
+            0.08
+        );
 
 
     float2 parallaxDirection =
-        viewPlane / safeViewNormal;
+        viewPlane /
+        safeViewNormal;
 
 
     float layerCount =
@@ -244,7 +349,8 @@ float2 ParallaxOcclusionMapping(
 
 
     float layerDepth =
-        1.0 / layerCount;
+        1.0 /
+        layerCount;
 
 
     float2 uvStep =
@@ -348,19 +454,6 @@ float2 GetParallaxUV_X(
         : -1.0;
 
 
-    // UV mapping:
-    //
-    // U =  Z * signX
-    // V =  Y
-    //
-    // Therefore:
-    // Tangent   =  Z * signX
-    // Bitangent = -Y
-    // Normal    =  X * signX
-    //
-    // T x B = N
-    //
-
     float3 projectionNormal =
         float3(
             signX,
@@ -429,18 +522,6 @@ float2 GetParallaxUV_Y(
         : -1.0;
 
 
-    // UV mapping:
-    //
-    // U = X
-    // V = Z * signY
-    //
-    // Tangent   = X
-    // Bitangent = Z * signY
-    // Normal    = Y * signY
-    //
-    // T x B = N
-    //
-
     float3 projectionNormal =
         float3(
             0.0,
@@ -508,19 +589,6 @@ float2 GetParallaxUV_Z(
         ? 1.0
         : -1.0;
 
-
-    // UV mapping:
-    //
-    // U = X * signZ
-    // V = Y
-    //
-    // Therefore:
-    // Tangent   = X * signZ
-    // Bitangent = -Y
-    // Normal    = Z * signZ
-    //
-    // T x B = N
-    //
 
     float3 projectionNormal =
         float3(
@@ -714,8 +782,6 @@ float SampleTriplanarAO(
 
 float3 SampleTriplanarNormalMap(float2 uv)
 {
-    // Use URP's normal decoder so the normal texture is treated
-    // exactly like a regular URP normal map.
     float3 normalTS =
         UnpackNormalScale(
             SAMPLE_TEXTURE2D(
@@ -748,17 +814,6 @@ float3 SampleNormalX(
         ? 1.0
         : -1.0;
 
-
-    // Must match GetTriplanarUV:
-    //
-    // U = Z * signX
-    // V = Y
-    //
-    // Right-handed basis:
-    // T =  Z * signX
-    // B = -Y
-    // N =  X * signX
-    //
 
     float3 tangent =
         float3(
@@ -810,17 +865,6 @@ float3 SampleNormalY(
         : -1.0;
 
 
-    // Must match GetTriplanarUV:
-    //
-    // U = X
-    // V = Z * signY
-    //
-    // Right-handed basis:
-    // T = X
-    // B = Z * signY
-    // N = Y * signY
-    //
-
     float3 tangent =
         float3(
             1.0,
@@ -870,17 +914,6 @@ float3 SampleNormalZ(
         ? 1.0
         : -1.0;
 
-
-    // Must match GetTriplanarUV:
-    //
-    // U = X * signZ
-    // V = Y
-    //
-    // Right-handed basis:
-    // T = X * signZ
-    // B = -Y
-    // N = Z * signZ
-    //
 
     float3 tangent =
         float3(
@@ -1266,8 +1299,11 @@ struct TriplanarVaryings
         );
 
 
-    // Height Color is deliberately applied AFTER PBR lighting.
-        float heightColorMask =
+    // --------------------------------------------------------
+    // Raised areas color
+    // --------------------------------------------------------
+
+        float raisedMask =
         GetTriplanarHeightColorMask(
             parallaxUVX,
             parallaxUVY,
@@ -1276,13 +1312,46 @@ struct TriplanarVaryings
         );
 
 
+    // --------------------------------------------------------
+    // Recessed areas color
+    // --------------------------------------------------------
+
+        float recessedMask =
+        GetTriplanarInverseHeightColorMask(
+            parallaxUVX,
+            parallaxUVY,
+            parallaxUVZ,
+            weights
+        );
+
+
+    // --------------------------------------------------------
+    // Apply raised color
+    // --------------------------------------------------------
+
         color.rgb =
         lerp(
             color.rgb,
             color.rgb * _HeightColor.rgb,
-            heightColorMask
+            raisedMask
         );
 
+
+    // --------------------------------------------------------
+    // Apply recessed color
+    // --------------------------------------------------------
+
+        color.rgb =
+        lerp(
+            color.rgb,
+            color.rgb * _HeightColorInverse.rgb,
+            recessedMask
+        );
+
+
+    // --------------------------------------------------------
+    // Fog
+    // --------------------------------------------------------
 
         color.rgb =
         MixFog(

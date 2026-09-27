@@ -28,6 +28,10 @@ Shader "Custom/TriplanarLit_HeightColor"
         _HeightColorStrength("Height Color Strength", Range(0,1)) = 0.0
         _HeightColorThreshold("Height Color Threshold", Range(0,1)) = 0.5
         _HeightColorSmoothness("Height Color Smoothness", Range(0.001,0.5)) = 0.08
+        _HeightColorInverse("Inverse Height Color", Color) = (0,0,1,1)
+        _HeightColorInverseStrength("Inverse Height Color Strength", Range(0,1)) = 0.0
+        _HeightColorInverseThreshold("Inverse Height Color Threshold", Range(0,1)) = 0.5
+        _HeightColorInverseSmoothness("Inverse Height Color Smoothness", Range(0.001,0.5)) = 0.08
 
         [NoScaleOffset]
         _OcclusionMap("Ambient Occlusion Map", 2D) = "white" {}

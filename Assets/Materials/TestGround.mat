@@ -117,9 +117,12 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _HeightColorInverseSmoothness: 0.08
+    - _HeightColorInverseStrength: 0
+    - _HeightColorInverseThreshold: 0.5
     - _HeightColorSmoothness: 0.206
     - _HeightColorStrength: 0
-    - _HeightColorThreshold: 0.323
+    - _HeightColorThreshold: 0
     - _HeightSteps: 12
     - _HeightStrength: 0
     - _Metallic: 0
@@ -143,7 +146,8 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _HeightColor: {r: 0.5943396, g: 0, b: 0, a: 1}
+    - _HeightColor: {r: 0.4528302, g: 0.0064079626, b: 0.0064079626, a: 1}
+    - _HeightColorInverse: {r: 0, g: 0, b: 1, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _TriplanarOffset: {r: 0, g: 0, b: 0, a: 0}
     - _TriplanarTiling: {r: 0.25, g: 0.25, b: 0, a: 0}

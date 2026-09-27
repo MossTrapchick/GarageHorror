@@ -334,7 +334,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 165abf79ab6e01947bd9ae23128adb49, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.5
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -494,6 +494,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3033390446888467329, guid: 72e4da9cc0326824ab986d700602efa0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: d420ca3d6e7f82740b728430c0dad197, type: 2}
     - target: {fileID: 4369509999553471773, guid: 72e4da9cc0326824ab986d700602efa0, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -510,6 +514,14 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6182683247259450406, guid: 72e4da9cc0326824ab986d700602efa0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 5b480ef0ce0d6e94495f16c698788dd6, type: 2}
+    - target: {fileID: 6439793236251919902, guid: 72e4da9cc0326824ab986d700602efa0, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 47f389bc0449dd14197144ec4355677c, type: 2}
     - target: {fileID: 6536809060740935864, guid: 72e4da9cc0326824ab986d700602efa0, type: 3}
       propertyPath: m_CastShadows
       value: 0
